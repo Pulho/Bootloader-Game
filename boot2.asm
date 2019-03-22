@@ -51,10 +51,6 @@ ret
 time_delay:
 	call delay_set
 	call delay_set
-	call delay_set
-	call delay_set
-	call delay_set
-	call delay_set
 ret
 
 print_String_red: ; printa string
