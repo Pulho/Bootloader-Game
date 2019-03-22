@@ -6,14 +6,15 @@ Project from the discipline of Software infrastructure from the Computer Enginee
 ## Motivation:
 <img width="790" height="370" align="center" style="float: left; margin: 0 10px 0 0;" alt="RPGInspiration" src="https://github.com/Pulho/Bootloader-Game/blob/master/misc/sanctuaryrpg-weapon-790x370.png">  
 
-   We had as strong motivation the RPG made with ASCII called  "Sanctuary RPG ". But we also had inspiration on movies like "Lord of Rings" ( As you can see, the dragon is called Smaug haha ) and all the culture that motivate RPG style!
+   We had as strong motivation the RPG made with ASCII called  "Sanctuary RPG ". But we also had inspiration on sagas like "Lord of Rings" ( As you can see, the dragon is called Smaug haha ) and the whole culture that motivates RPG style!
 
 ## Our Game:
-<img width="640" height="400" align="center" style="float: left; margin: 0 10px 0 0;" alt="GameSlime" src="https://github.com/Pulho/Bootloader-Game/blob/master/misc/slimeFight640x400.jpeg">  
-    What would be a good RPG without a simple slime, huh? 
 
-<img width="640" height="400" align="center" style="float: left; margin: 0 10px 0 0;" alt="GameDragon" src="https://github.com/Pulho/Bootloader-Game/blob/master/misc/dragonFight640x400.jpeg">  
-    Thats is our little Baby Dragon called Smaug haha.
+   <img width="640" height="400" align="center" style="float: left; margin: 0 10px 0 0;" alt="GameSlime" src="https://github.com/Pulho/Bootloader-Game/blob/master/misc/slimeFight640x400.jpeg">
+   What would be a good RPG without a simple slime, huh?
+ 
+   <img width="640" height="400" align="center" style="float: left; margin: 0 10px 0 0;" alt="GameDragon" src="https://github.com/Pulho/Bootloader-Game/blob/master/misc/dragonFight640x400.jpeg"> 
+   Thats is our little Baby Dragon called Smaug haha.
 
 ## How to execute it:
    For it will be necessary to have the following tools:
