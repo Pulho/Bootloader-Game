@@ -17,9 +17,10 @@ Project from the discipline of Software infrastructure from the Computer Enginee
 
 ## How to execute it:
    For it will be necessary to have the following tools:
-        - Nasm
-        - Qemu
-        - Make
+      
+      * Nasm
+      * Qemu
+      * Make
 
    If you already have all of them, just enter the directory through the terminal and insert the run
         ```make```
