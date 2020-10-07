@@ -28,5 +28,5 @@ Project from the discipline of Software infrastructure from the Computer Enginee
 
 ## DEVS
 * [Paulo Victor de Oliveira Andrade](https://github.com/Pulho)
-* [Manoel Alves Xavier Neto](https://github.com/maxn13)
+* [Manoel Alves Xavier Neto](https://github.com/oxemaxn)
 * [Gabriel Matheus](https://github.com/gmsj)
