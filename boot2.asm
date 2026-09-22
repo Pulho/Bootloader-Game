@@ -127,15 +127,36 @@ reset:
 
 
 load:
-    mov ah, 02h ;lê um setor do disco
-    mov al, 20  ;quantidade de setores ocupados pelo kernel
+    mov di, KERNEL_SECTORS ;quantidade de setores do kernel (definida pelo Makefile)
     mov ch, 0   ;track 0
     mov cl, 3   ;sector 3
     mov dh, 0   ;head 0
     mov dl, 0   ;drive 0
+
+;lê um setor por vez para nunca atravessar o fim de uma trilha
+;(disquete de 1.44MB: 18 setores por trilha, 2 cabeças)
+load_sector:
+    mov ah, 02h ;lê um setor do disco
+    mov al, 1
     int 13h
 
-    jc load     ;se o acesso falhar, tenta novamente
+    jc load_sector ;se o acesso falhar, tenta novamente
+
+    mov ax, es  ;avança 512 bytes no destino
+    add ax, 0x20
+    mov es, ax
+
+    inc cl      ;próximo setor
+    cmp cl, 18
+    jbe next_sector
+    mov cl, 1   ;fim da trilha: volta ao setor 1 e troca de cabeça
+    xor dh, 1
+    jnz next_sector
+    inc ch      ;passou pelas duas cabeças: próxima trilha
+
+next_sector:
+    dec di
+    jnz load_sector
 
     call initPixel
     mov si, loading_Strct
