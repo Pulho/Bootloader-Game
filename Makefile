@@ -1,50 +1,68 @@
-#primeiro estágio
-boot1_file = boot1
+# Bootloader-Game
+#
+# Tudo roda dentro do Docker; na máquina só são necessários `make` e `docker`.
+#   make        -> constrói a imagem Docker, monta o disco e roda o jogo
+#   make clean  -> apaga os arquivos gerados
+#
+# Os alvos `disk` e `play` são usados dentro do container.
 
-#segundo estágio
-boot2_file = boot2
-boot2_pos = 1
-boot2_size = 1
+IMAGE     := bootloader-game
+BUILD     := build
+DISK      := $(BUILD)/disk.img
+VNC_PORT  := 6080
 
-#kernel
-kernel_file = kernel
-kernel_pos = 2
-kernel_size = 20
+# Disquete padrão de 1.44MB: 2880 setores de 512 bytes (18 setores/trilha, 2 cabeças, 80 trilhas)
+SECTOR    := 512
+DISK_SECT := 2880
 
-boot_disk = disk.img
-block_size = 512
-disk_size = 100
+.PHONY: run docker-image clean disk play
 
-nasm_flags = -f bin
-qemu_flags = -fda
+# ---------- na máquina (host) ----------
 
-all: create_disk boot1_only boot2_only kernel_only write_boot1 write_boot2 write_kernel launch_qemu clean
+run: docker-image
+	docker run --rm -it --init \
+		-u $$(id -u):$$(id -g) \
+		-v "$(CURDIR)":/src \
+		-p $(VNC_PORT):6080 \
+		$(IMAGE) make -s play || [ $$? -eq 130 ]  # 130 = encerrado com Ctrl+C
 
-create_disk:
-	@dd if=/dev/zero of=$(boot_disk) bs=$(block_size) count=$(disk_size) status=noxfer
-
-boot1_only:
-	@nasm $(nasm_flags) $(boot1_file).asm -o $(boot1_file).bin
-
-boot2_only:
-	@nasm $(nasm_flags) $(boot2_file).asm -o $(boot2_file).bin
-
-kernel_only:
-	@nasm $(nasm_flags) $(kernel_file).asm -o $(kernel_file).bin
-
-write_boot1:
-	@dd if=$(boot1_file).bin of=$(boot_disk) bs=$(block_size) count=1 conv=notrunc status=noxfer
-
-write_boot2:
-	@dd if=$(boot2_file).bin of=$(boot_disk) bs=$(block_size) seek=$(boot2_pos) count=$(boot2_size) conv=notrunc status=noxfer
-
-write_kernel:
-	@dd if=$(kernel_file).bin of=$(boot_disk) bs=$(block_size) seek=$(kernel_pos) count=$(kernel_size) conv=notrunc
-
-launch_qemu:
-	clear
-	@qemu-system-i386 $(qemu_flags) $(boot_disk)
+docker-image:
+	docker build -q -t $(IMAGE) docker
 
 clean:
-	@rm -f *.bin $(boot_disk) *~
-	clear
+	rm -rf $(BUILD)
+
+# ---------- dentro do container ----------
+
+disk: $(DISK)
+
+play: $(DISK)
+	@websockify --web /usr/share/novnc 6080 localhost:5900 >/dev/null 2>&1 &
+	@echo
+	@echo "  Jogo rodando em: http://localhost:$(VNC_PORT)/vnc.html?autoconnect=1&resize=scale"
+	@echo "  Ctrl+C para encerrar."
+	@echo
+	@qemu-system-i386 -drive file=$(DISK),format=raw,if=floppy -boot a -vnc :0
+
+$(BUILD):
+	mkdir -p $@
+
+$(BUILD)/kernel.bin: kernel.asm | $(BUILD)
+	nasm -f bin $< -o $@
+
+$(BUILD)/boot1.bin: boot1.asm | $(BUILD)
+	nasm -f bin $< -o $@
+	@test $$(stat -c %s $@) -eq $(SECTOR) || { echo "erro: boot1 precisa ter exatamente $(SECTOR) bytes"; exit 1; }
+
+# O boot2 recebe do Makefile quantos setores o kernel ocupa (calculado a partir do .bin),
+# então não existe mais um tamanho fixo duplicado entre o Makefile e o assembly.
+$(BUILD)/boot2.bin: boot2.asm $(BUILD)/kernel.bin | $(BUILD)
+	nasm -f bin -DKERNEL_SECTORS=$$(( ($$(stat -c %s $(BUILD)/kernel.bin) + $(SECTOR) - 1) / $(SECTOR) )) $< -o $@
+	@test $$(stat -c %s $@) -le $(SECTOR) || { echo "erro: boot2 passou de $(SECTOR) bytes (o boot1 carrega só 1 setor)"; exit 1; }
+
+# Layout do disco: setor 1 = boot1, setor 2 = boot2, setor 3 em diante = kernel
+$(DISK): $(BUILD)/boot1.bin $(BUILD)/boot2.bin $(BUILD)/kernel.bin
+	dd if=/dev/zero                of=$@ bs=$(SECTOR) count=$(DISK_SECT) status=none
+	dd if=$(BUILD)/boot1.bin  of=$@ bs=$(SECTOR) seek=0 conv=notrunc status=none
+	dd if=$(BUILD)/boot2.bin  of=$@ bs=$(SECTOR) seek=1 conv=notrunc status=none
+	dd if=$(BUILD)/kernel.bin of=$@ bs=$(SECTOR) seek=2 conv=notrunc status=none
